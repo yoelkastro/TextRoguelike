@@ -36,7 +36,7 @@ var gameBoard = {
 
 		this.gc = this.canvas.getContext("2d");
 
-		this.desiredWidth = function() {return roomCenter[0] * 2};
+		this.desiredWidth = function() {return window.innerWidth / 3.5};
 		this.desiredHeight = function() {return window.innerHeight - 20};
 
 		this.canvas.width = this.desiredWidth;
@@ -68,14 +68,16 @@ var gameBoard = {
 	},
 	// Resize the canvas depending on how much space is available
 	resize : function(){
+		roomSize = window.innerWidth / 7;
+
 		if(!viewingMap){
-			roomSize = window.innerWidth / 7;
+			roomCenter = [roomSize / 2 + 80, roomSize / 2 + 60];
 		}
 		else{
-			roomSize = 20;
+			roomCenter = [roomSize / 2 + 80, roomSize / 2 + 60];
 		}
 		
-		roomCenter = [roomSize / 2 + 80, roomSize / 2 + 60];
+		
 		player.defaultPos = roomCenter;
 
 		// If the width to height ratio is larger than desired, use height as the basis for size
@@ -131,31 +133,30 @@ function drawDungeon(gc){
 	let drawnRooms = new Array();
 	gc.fillStyle = "#FFFFFF";
 
-
 	// Draw entire dungeon
 
 	function drawRooms(room, x, y){
 
-		gc.fillRect(x - roomSize / 2, y - roomSize / 2, roomSize, roomSize);
+		gc.fillRect(x - mapRoomSize / 2, y - mapRoomSize / 2, mapRoomSize, mapRoomSize);
 		drawnRooms.push(room);
 
 		if(room === player.currentRoom){
 			gc.fillStyle = "#FF0000";
-			gc.fillRect(x - roomSize / 4, y - roomSize / 4, roomSize / 2, roomSize / 2);
+			gc.fillRect(x - mapRoomSize / 4, y - mapRoomSize / 4, mapRoomSize / 2, mapRoomSize / 2);
 			gc.fillStyle = "#FFFFFF";
 		}
 
 		if(typeof room.walls.north !== 'undefined' && !drawnRooms.includes(room.walls.north)){ // To-Do: Rewrite !!
-			drawRooms(room.walls.north, x, y - roomSize * 1.2);
+			drawRooms(room.walls.north, x, y - mapRoomSize * 1.2);
 		}
 		if(typeof room.walls.south !== 'undefined' && !drawnRooms.includes(room.walls.south)){
-			drawRooms(room.walls.south, x, y + roomSize * 1.2);
+			drawRooms(room.walls.south, x, y + mapRoomSize * 1.2);
 		}
 		if(typeof room.walls.west !== 'undefined' && !drawnRooms.includes(room.walls.west)){
-			drawRooms(room.walls.west, x - roomSize * 1.2, y);
+			drawRooms(room.walls.west, x - mapRoomSize * 1.2, y);
 		}
 		if(typeof room.walls.east !== 'undefined' && !drawnRooms.includes(room.walls.east)){
-			drawRooms(room.walls.east, x + roomSize * 1.2, y);
+			drawRooms(room.walls.east, x + mapRoomSize * 1.2, y);
 		}
 
 	}
@@ -182,6 +183,7 @@ function drawPlayerView(gc){
 var viewingMap = false;
 
 var roomSize = 200;
+var mapRoomSize = 20;
 var roomCenter = [roomSize / 2 + 80, roomSize / 2 + 60]
 var mapShift = [0, 0];
 
@@ -247,7 +249,7 @@ function update(){
 	}
 	//console.log(roomCenter[0] - player.canvasCoords);
  	if(gameBoard.command != ""){
-		commandManager.resolveCommand(gameBoard.command);
+		console.log(commandManager.resolveCommand(gameBoard.command));
 		gameBoard.command = "";
 	}
 	//commandManager.resolveCommand(prompt("dir", ""));
