@@ -2,11 +2,29 @@ class Room {
 	
 	constructor(){
 		this.walls = {north: undefined, west: undefined, south: undefined, east: undefined};
+		this.interactables = [];
+		this.visited = false;
 	}
 
 	initializeWallEvents(){
 
 	}
+
+	drawAsWall(gc, dir, roomSize, roomCenter){
+
+		gc.fillStyle = "#F0F0F0";
+
+		var corridorWidth = roomSize * 0.8;
+		var corridorHeigth = roomSize / 10;
+
+		gc.fillRect(roomCenter[0] + ((dir % 2) * ((roomSize / 2) * (dir - 2)) - ((dir == 1)? (corridorHeigth):0)) - (((dir + 1) % 2) * (corridorWidth / 2)),
+					roomCenter[1] + (((dir + 1) % 2) * ((roomSize / 2) * (dir - 1)) - ((dir == 0)? (corridorHeigth):0)) - ((dir % 2) * (corridorWidth / 2)),
+					(((dir + 1) % 2) * corridorWidth) + ((dir % 2) * corridorHeigth),
+					((dir % 2) * corridorWidth) + (((dir + 1) % 2) * corridorHeigth)
+					
+			);
+
+	}	
 
 }
 
