@@ -14,8 +14,8 @@ class Room {
 
 		gc.fillStyle = "#F0F0F0";
 
-		var corridorWidth = roomSize * 0.8;
-		var corridorHeigth = roomSize / 10;
+		var corridorWidth = roomSize * 0.6;
+		var corridorHeigth = roomSize / 7.5;
 
 		gc.fillRect(roomCenter[0] + ((dir % 2) * ((roomSize / 2) * (dir - 2)) - ((dir == 1)? (corridorHeigth):0)) - (((dir + 1) % 2) * (corridorWidth / 2)),
 					roomCenter[1] + (((dir + 1) % 2) * ((roomSize / 2) * (dir - 1)) - ((dir == 0)? (corridorHeigth):0)) - ((dir % 2) * (corridorWidth / 2)),

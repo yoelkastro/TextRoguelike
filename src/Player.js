@@ -17,6 +17,7 @@ class Player {
 	moveToNextRoom(){
 		if(this.headingDirection != "none" && this.moveTarget == "room"){
 			this.currentRoom = this.currentRoom.walls[this.headingDirection];
+			this.currentRoom.visited = true;
 			this.setMoveTarget("center");
 		}
 	}

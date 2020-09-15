@@ -10,6 +10,9 @@ class CommandManager {
 	}
 
 	go(args){
+		if(viewingMap){
+			return "Can't move while looking at map.";
+		}
 		if(directions.includes(args[0]) && args.length < 2){
 			if(player.currentRoom.walls[args[0]] !== undefined){
 				player.setNextMoveDirection(args[0]);
@@ -21,7 +24,7 @@ class CommandManager {
 			}
 		}
 		else{
-			return "Not a valid direction";
+			return "Not a valid direction.";
 		}
 
 	}
@@ -32,10 +35,10 @@ class CommandManager {
 
 	inventory(){
 		var result = ""
-		result += "You have: \n";
+		result += "You have:";
 
 		for(var i = 0; i < player.inventory[0].length; i ++){
-			result += player.inventory[0][i].itemName + " x " + player.inventory[1][i] + "\n";
+			result += "<br>" + player.inventory[0][i].itemName + " x " + player.inventory[1][i];
 		}
 
 		return result
@@ -114,7 +117,7 @@ class CommandManager {
 			case "open": 		res += this.open(sp.slice(1, sp.length));	break;
 			case "close": 		res += this.close(sp.slice(1, sp.length));	break;
 
-			default: res += "Unrecognized command";
+			default: res += "Unrecognized command.";
 
 		}
 
