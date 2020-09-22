@@ -1,7 +1,7 @@
-
 //var resolution = 6/8; // Ratio of the Canvas
 
 var directions = ["north", "west", "south", "east"];
+var debug = false;
 
 // gameBoard is the object that has the canvas
 var gameBoard = {
@@ -141,7 +141,9 @@ function drawDungeon(gc){
 
 	function drawRooms(room, x, y){
 
-		if(room.visited){
+		gc.fillStyle = "#FFFFFF";
+
+		if(room.visited || debug){
 			gc.fillRect(x - mapRoomSize() / 2, y - mapRoomSize() / 2, mapRoomSize(), mapRoomSize());
 
 			for(var i = 0; i < directions.length; i ++){
@@ -163,10 +165,9 @@ function drawDungeon(gc){
 		
 		for(var i = 0; i < directions.length; i ++){
 
-			if(room.walls[directions[i]] !== undefined && !drawnRooms.includes(room.walls[directions[i]])){
+			if(isRoom(room.walls[directions[i]]) && !drawnRooms.includes(room.walls[directions[i]])){
 				drawRooms(room.walls[directions[i]], x + (mapRoomSize() * 1.2 * (i % 2) * (i - 2)), y + (mapRoomSize() * 1.2 * ((i + 1) % 2) * ((i + 1) - 2)))
 			}
-
 		}
 
 	}
@@ -193,7 +194,9 @@ function drawPlayerView(gc){
 var viewingMap = false;
 
 var roomSize = 200;
-var mapRoomSize = function() {return roomSize / 10};
+
+var mapRoomModifier = 10;
+var mapRoomSize = function() {return roomSize / mapRoomModifier};
 var roomCenter = [roomSize / 2 + 80, roomSize / 2 + 60]
 var mapShift = [0, 0];
 
@@ -202,16 +205,26 @@ var frames = 0;
 gameBoard.initialize(); // Initialize the gameBoard
 //gameBoard.setResolution(resolution); // Set the resolution
 
+var curFloorNo = 0;
 var d = new Dungeon();
-var floor = d.generateFloor(6);
+var floor;
 
 var player = new Player();
-player.setRoom(floor[0]);
-floor[0].visited = true;
 player.defaultPos = roomCenter;
 
 var commandManager = new CommandManager(player);
 
+function nextFloor(){
+
+	curFloorNo ++;
+	floor = d.generateFloor(curFloorNo);
+	player.setRoom(floor[0]);
+	floor[0].visited = true;
+
+}
+
+
+nextFloor();
 
 /*
 	update: Update the gameBoard and entities
@@ -244,17 +257,27 @@ function update(){
 		player.draw(gameBoard.gc, roomSize / 6);
 	}
 	else{
-		if(gameBoard.keys.includes(37)){
-			mapShift[0] += 1;
+		if(!gameBoard.keys.includes(16)){
+			if(gameBoard.keys.includes(37)){
+				mapShift[0] += 1 * (10 / mapRoomModifier);
+			}
+			if(gameBoard.keys.includes(38)){
+				mapShift[1] += 1 * (10 / mapRoomModifier);
+			}
+			if(gameBoard.keys.includes(39)){
+				mapShift[0] -= 1 * (10 / mapRoomModifier);
+			}
+			if(gameBoard.keys.includes(40)){
+				mapShift[1] -= 1 * (10 / mapRoomModifier);
+			}
 		}
-		if(gameBoard.keys.includes(38)){
-			mapShift[1] += 1;
-		}
-		if(gameBoard.keys.includes(39)){
-			mapShift[0] -= 1;
-		}
-		if(gameBoard.keys.includes(40)){
-			mapShift[1] -= 1;
+		else{
+			if(gameBoard.keys.includes(38) && mapRoomModifier != 1){
+				mapRoomModifier -= 1;
+			}
+			if(gameBoard.keys.includes(40) && mapRoomModifier != 25){
+				mapRoomModifier += 1;
+			}
 		}
 		drawDungeon(gameBoard.gc);
 	}

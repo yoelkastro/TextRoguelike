@@ -26,11 +26,13 @@ class Map extends Item {
 	static open(){
 		this.isOpen = true;
 		viewingMap = true;
+		return "Opened map.";
 	}
 
 	static close(){
 		this.isOpen = false;
 		viewingMap = false;
+		return "Closed map.";
 	}
 
 }

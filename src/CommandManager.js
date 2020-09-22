@@ -14,7 +14,7 @@ class CommandManager {
 			return "Can't move while looking at map.";
 		}
 		if(directions.includes(args[0]) && args.length < 2){
-			if(player.currentRoom.walls[args[0]] !== undefined){
+			if(isRoom(player.currentRoom.walls[args[0]])){
 				player.setNextMoveDirection(args[0]);
 				player.setMoveTarget("room");
 				return "Went " + args[0] + ".";
@@ -23,8 +23,11 @@ class CommandManager {
 				return "No passage in direction " + args[0] + ".";
 			}
 		}
+		else if(args[0] == "down" && this.currentInteractable.includes(Stairs)){
+			return Stairs.use();
+		}
 		else{
-			return "Not a valid direction.";
+			return "Not a valid direction." + args[0];
 		}
 
 	}
@@ -42,23 +45,6 @@ class CommandManager {
 		}
 
 		return result
-	}
-
-	open(args){
-
-		for(var a = 0; a < args.length; a ++){
-			for(var i = 0; i < this.currentInteractable.length; i ++){
-				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
-					try{
-						this.currentInteractable[i].open();
-						return "Opened " + args[a] + ".";
-					}
-					catch{}
-				}
-			}
-		}
-		return "Can't open that.";
-
 	}
 
 	open(args){
@@ -88,8 +74,7 @@ class CommandManager {
 				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
 					try{
 						if(this.currentInteractable[i].isOpen){
-							this.currentInteractable[i].close();
-							return "Closed " + args[a] + ".";
+							return this.currentInteractable[i].close();
 						}
 						else{
 							return "That is already closed.";
@@ -99,6 +84,20 @@ class CommandManager {
 			}
 		}
 		return "Can't close that.";
+	}
+
+	use(args){
+
+		for(var a = 0; a < args.length; a ++){
+			for(var i = 0; i < this.currentInteractable.length; i ++){
+				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
+					try{
+						return this.currentInteractable[i].use();
+					} catch{}
+				}
+			}
+		}
+		return "Can't use that.";
 	}
 
 	resolveCommand(command){
@@ -115,6 +114,7 @@ class CommandManager {
 			case "help": 		res += this.help(sp.slice(1, sp.length)); 	break;
 			case "inventory": 	res += this.inventory(); 					break;
 			case "open": 		res += this.open(sp.slice(1, sp.length));	break;
+			case "use": 		res += this.use(sp.slice(1, sp.length));	break;
 			case "close": 		res += this.close(sp.slice(1, sp.length));	break;
 
 			default: res += "Unrecognized command.";
