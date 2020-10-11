@@ -1,3 +1,4 @@
+// Checks if an object is a room
 function isRoom(obj){
 
 	if(obj !== undefined){
@@ -10,13 +11,20 @@ function isRoom(obj){
 
 }
 
+/*
+	General abstract class for structures in the dungeon
+*/
 class Construction {
 
-	constructor(){}
+	constructor(){
+		
+	}
 
+
+	// Draw the representation of the room when it is a wall in another room
 	drawAsWall(gc, dir, roomSize, roomCenter){
 
-		gc.fillStyle = "#F0F0F0";
+		gc.fillStyle = this.color;
 
 		var corridorWidth = roomSize * 0.6;
 		var corridorHeigth = roomSize / 7.5;
@@ -32,6 +40,9 @@ class Construction {
 
 }
 
+/*
+	Regular room, makes up most of the dungeon
+*/
 class Room extends Construction {
 	
 	constructor(){
@@ -39,30 +50,63 @@ class Room extends Construction {
 		this.walls = {north: undefined, west: undefined, south: undefined, east: undefined};
 		this.interactables = [];
 		this.visited = false;
+		this.color = "#F0F0F0";
 	}
 
 	initializeWallEvents(){
 
 	}
 
-	drawAsWall(gc, dir, roomSize, roomCenter){
+	// Draw the room as itself
+	draw(gc, roomSize, roomCenter){
 
-		gc.fillStyle = "#F0F0F0";
+		gc.fillStyle = "#FFFFFF";
 
-		var corridorWidth = roomSize * 0.6;
-		var corridorHeigth = roomSize / 7.5;
+		gc.fillRect(roomCenter[0] - (roomSize / 2), roomCenter[1] - (roomSize / 2), roomSize, roomSize);
 
-		gc.fillRect(roomCenter[0] + ((dir % 2) * ((roomSize / 2) * (dir - 2)) - ((dir == 1)? (corridorHeigth):0)) - (((dir + 1) % 2) * (corridorWidth / 2)),
-					roomCenter[1] + (((dir + 1) % 2) * ((roomSize / 2) * (dir - 1)) - ((dir == 0)? (corridorHeigth):0)) - ((dir % 2) * (corridorWidth / 2)),
-					(((dir + 1) % 2) * corridorWidth) + ((dir % 2) * corridorHeigth),
-					((dir % 2) * corridorWidth) + (((dir + 1) % 2) * corridorHeigth)
-					
-			);
+		for(var i = 0; i < directions.length; i ++){
+
+			if(this.walls[directions[i]] !== undefined){
+				this.walls[directions[i]].drawAsWall(gc, i, roomSize, roomCenter);
+			}
+
+		}
 
 	}
 
 }
 
+/*
+	Room where combat encounters happen, isn't represented on the map
+*/
+class Corridor extends Room {
+
+	constructor(entranceDir, exitedRoom){
+		super()
+		this.entranceDir = entranceDir;
+		this.walls[directions[(directions.findIndex(d => d == entranceDir) + 2) % 4]] = exitedRoom;
+		this.walls[entranceDir] = exitedRoom.walls[entranceDir];
+	}
+
+	draw(gc, roomSize, roomCenter){
+
+		gc.fillStyle = "#F0F0F0";
+
+		var combatRoomWidth = roomSize * 0.6;
+		var combatRoomHeight = roomSize + roomSize / 3.75;
+
+		var drawHeight = (player.facingDirection % 2) * combatRoomWidth + ((player.facingDirection + 1) % 2) * combatRoomHeight;
+		var drawWidth = ((player.facingDirection + 1) % 2) * combatRoomWidth + (player.facingDirection % 2) * combatRoomHeight;
+
+		gc.fillRect(roomCenter[0] - drawWidth / 2, roomCenter[1] - drawHeight / 2, drawWidth, drawHeight);
+
+	}
+
+}
+
+/*
+	Used to move to the next room. Functions have to be static since it is also an interactable.
+*/
 class Stairs extends Construction {
 
 	static drawAsWall(gc, dir, roomSize, roomCenter){
@@ -87,6 +131,9 @@ class Stairs extends Construction {
 
 }
 
+/*
+	Class responsible with dungeon generation
+*/
 class Dungeon {
 
 	constructor(){
@@ -196,7 +243,6 @@ class Dungeon {
 
 			var randDir = availableDirs[Math.floor(Math.random() * availableDirs.length)]
 			randRoom.walls[randDir] = Stairs;
-			console.log(randRoom);
 			randRoom.interactables.push(Stairs);
 		}
 

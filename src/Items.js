@@ -1,3 +1,6 @@
+/*
+	Generic representation of an item
+*/
 class Item {
 
 	static open(){
@@ -19,14 +22,20 @@ class Item {
 }	
 Item.description = "An item";
 
+/*
+	A map. Can only have one.
+*/
 class Map extends Item {
 
 	isOpen = false;
 
 	static open(){
-		this.isOpen = true;
-		viewingMap = true;
-		return "Opened map.";
+		if(!player.inCombat){
+			this.isOpen = true;
+			viewingMap = true;
+			return "Opened map.";
+		}
+		return "Can't open map during combat.";
 	}
 
 	static close(){

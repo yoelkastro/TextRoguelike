@@ -47,6 +47,7 @@ var gameBoard = {
 		this.canvas.height = this.desiredHeight;
 
 		this.keys = [];
+
 		// Add action listeners for the mouse and keyboard
 		window.addEventListener('mousemove', function (e) {
      		gameBoard.mouseX = e.pageX;
@@ -132,27 +133,20 @@ var gameBoard = {
 
 }
 
+// Draw entire dungeon, used for map drawing
 function drawDungeon(gc){
 
 	let drawnRooms = new Array();
 	gc.fillStyle = "#FFFFFF";
 
-	// Draw entire dungeon
-
 	function drawRooms(room, x, y){
 
 		gc.fillStyle = "#FFFFFF";
 
-		if(room.visited || debug){
-			gc.fillRect(x - mapRoomSize() / 2, y - mapRoomSize() / 2, mapRoomSize(), mapRoomSize());
+		if(room.visited || debug){ // Draw all rooms if in debug mode, else only draw the visited ones
 
-			for(var i = 0; i < directions.length; i ++){
+			room.draw(gc, mapRoomSize(), [x, y])
 
-				if(room.walls[directions[i]] !== undefined){
-					room.walls[directions[i]].drawAsWall(gc, i, mapRoomSize(), [x, y]);
-				}
-
-			}
 		}
 		drawnRooms.push(room);
 
@@ -162,7 +156,7 @@ function drawDungeon(gc){
 			gc.fillStyle = "#FFFFFF";
 		}
 
-		
+		// Draw neighbouring walls
 		for(var i = 0; i < directions.length; i ++){
 
 			if(isRoom(room.walls[directions[i]]) && !drawnRooms.includes(room.walls[directions[i]])){
@@ -176,28 +170,24 @@ function drawDungeon(gc){
 
 }
 
+// Only draws the room the player is in, used outside of map
 function drawPlayerView(gc){
 
-	gc.fillStyle = "#FFFFFF";
+	player.currentRoom.draw(gc, roomSize, roomCenter);
 
-	gc.fillRect(roomCenter[0] - (roomSize / 2), roomCenter[1] - (roomSize / 2), roomSize, roomSize);
-
-	for(var i = 0; i < directions.length; i ++){
-
-		if(player.currentRoom.walls[directions[i]] !== undefined){
-			player.currentRoom.walls[directions[i]].drawAsWall(gc, i, roomSize, roomCenter);
-		}
-
-	}
 }
 
 var viewingMap = false;
 
 var roomSize = 200;
 
+var combatOffset = roomSize / 3; // /* Tweak */
+
 var mapRoomModifier = 10;
 var mapRoomSize = function() {return roomSize / mapRoomModifier};
+
 var roomCenter = [roomSize / 2 + 80, roomSize / 2 + 60]
+
 var mapShift = [0, 0];
 
 var frames = 0;
@@ -207,20 +197,35 @@ gameBoard.initialize(); // Initialize the gameBoard
 
 var curFloorNo = 0;
 var d = new Dungeon();
-var floor;
+var floor; // Array representation of all rooms on the floor, index 0 is the starting room
 
 var player = new Player();
 player.defaultPos = roomCenter;
 
+var enemy = new Enemy;
+
 var commandManager = new CommandManager(player);
 
+// Generate and move to the next floor
 function nextFloor(){
-
 	curFloorNo ++;
 	floor = d.generateFloor(curFloorNo);
 	player.setRoom(floor[0]);
 	floor[0].visited = true;
+}
 
+// Starts a combat encounter
+function initiateCombat(){
+	player.inCombat = true;
+	player.combatOffset[0] = [combatOffset * (player.facingDirection % 2) * (player.facingDirection - 2)]
+	player.combatOffset[1] = [combatOffset * ((player.facingDirection + 1) % 2) * (player.facingDirection - 1)]
+
+	enemy = new Enemy();
+	enemy.facingDirection = (player.facingDirection + 2) % 4;
+	enemy.combatOffset[0] = [combatOffset * (enemy.facingDirection % 2) * (enemy.facingDirection - 2)];
+	enemy.combatOffset[1] = [combatOffset * ((enemy.facingDirection + 1) % 2) * (enemy.facingDirection - 1)];
+	enemy.updatePositions();
+	enemy.active = true;
 }
 
 
@@ -235,8 +240,19 @@ function update(){
 	gameBoard.update();
 	gameBoard.draw();
 
+	/*
+		Animate the player
+	*/
 	if((Math.abs(player.deltaPos[0]) >= roomSize / 2 || Math.abs(player.deltaPos[1]) >= roomSize / 2) && player.moveTarget == "room"){
-		player.moveToNextRoom();
+		if(Math.floor(Math.random() * 0) == 0 && !player.inCombat){
+			initiateCombat();
+			player.moveToNextRoom(new Corridor(player.headingDirection, player.currentRoom));
+		}
+		else{
+			player.inCombat = false;
+			player.moveToNextRoom(player.currentRoom.walls[player.headingDirection]);
+		}
+		
 		var dir = directions.findIndex(d => d == player.headingDirection);
 		player.deltaPos[0] *= -1;
 		player.deltaPos[1] *= -1;
@@ -251,12 +267,15 @@ function update(){
 
 	player.update();
 
-	//drawDungeon(floor, gameBoard.gc);
-	if(!viewingMap){
+	if(!viewingMap){ // Draw player view
 		drawPlayerView(gameBoard.gc);
 		player.draw(gameBoard.gc, roomSize / 6);
+		if(enemy.active){
+			enemy.draw(gameBoard.gc, roomSize / 6);
+		}
 	}
-	else{
+
+	else{ // Draw map and check map controls (arrow keys to move and zoom)
 		if(!gameBoard.keys.includes(16)){
 			if(gameBoard.keys.includes(37)){
 				mapShift[0] += 1 * (10 / mapRoomModifier);
@@ -281,12 +300,13 @@ function update(){
 		}
 		drawDungeon(gameBoard.gc);
 	}
-	//console.log(roomCenter[0] - player.canvasCoords);
- 	if(gameBoard.command != ""){
+
+	if(!player.inCombat) enemy.active = false;
+
+ 	if(gameBoard.command != ""){ // Get the next command
  		gameBoard.textField.innerHTML = gameBoard.textField.innerHTML + "<br><br>" + commandManager.resolveCommand(gameBoard.command);
 		gameBoard.command = "";
 	}
-	//commandManager.resolveCommand(prompt("dir", ""));
 
 }
 

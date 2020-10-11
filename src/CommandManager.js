@@ -9,12 +9,19 @@ class CommandManager {
 		this.currentInteractable = [];
 	}
 
+	help(args){
+
+	}
+
 	go(args){
 		if(viewingMap){
 			return "Can't move while looking at map.";
 		}
 		if(directions.includes(args[0]) && args.length < 2){
 			if(isRoom(player.currentRoom.walls[args[0]])){
+				if(player.inCombat && args[0] == directions[(enemy.facingDirection + 2) % 4]){
+					return "Passage to the " + args[0] + " is blocked by an enemy.";
+				}
 				player.setNextMoveDirection(args[0]);
 				player.setMoveTarget("room");
 				return "Went " + args[0] + ".";
@@ -32,7 +39,12 @@ class CommandManager {
 
 	}
 
-	help(args){
+	escape(){
+
+		if(player.inCombat){
+			return this.go([directions[enemy.facingDirection]]);
+		}
+		return "Nothing to escape from.";
 
 	}
 
@@ -116,6 +128,8 @@ class CommandManager {
 			case "open": 		res += this.open(sp.slice(1, sp.length));	break;
 			case "use": 		res += this.use(sp.slice(1, sp.length));	break;
 			case "close": 		res += this.close(sp.slice(1, sp.length));	break;
+			case "escape":
+			case "run": 		res += this.escape();						break;
 
 			default: res += "Unrecognized command.";
 
