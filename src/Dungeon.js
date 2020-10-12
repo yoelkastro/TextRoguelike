@@ -2,13 +2,16 @@
 function isRoom(obj){
 
 	if(obj !== undefined){
-		if(obj.hasOwnProperty("walls")){
-			return true;
-		}
+		return obj.hasOwnProperty("walls");
 	}
 
 	return false;
 
+}
+
+// Checks if an object is a corridor
+function isCorridor(obj){
+	return isRoom(obj) && obj.hasOwnProperty("enemy");
 }
 
 /*
@@ -83,9 +86,9 @@ class Corridor extends Room {
 
 	constructor(entranceDir, exitedRoom){
 		super()
-		this.entranceDir = entranceDir;
 		this.walls[directions[(directions.findIndex(d => d == entranceDir) + 2) % 4]] = exitedRoom;
 		this.walls[entranceDir] = exitedRoom.walls[entranceDir];
+		this.enemy = new Enemy();
 	}
 
 	draw(gc, roomSize, roomCenter){
@@ -99,6 +102,17 @@ class Corridor extends Room {
 		var drawWidth = ((player.facingDirection + 1) % 2) * combatRoomWidth + (player.facingDirection % 2) * combatRoomHeight;
 
 		gc.fillRect(roomCenter[0] - drawWidth / 2, roomCenter[1] - drawHeight / 2, drawWidth, drawHeight);
+
+		this.enemy.draw(gc, roomSize / 6);
+
+	}
+
+	drawAsWall(gc, dir, roomSize, roomCenter){
+
+		if(this.visited || debug) this.color = "#FF0000";
+		else			 		  this.color = "#F0F0F0";
+
+		super.drawAsWall(gc, dir, roomSize, roomCenter);
 
 	}
 
@@ -151,6 +165,7 @@ class Dungeon {
 		let floor = Array.from(Array(totalRooms * 2 + 1), () => new Array(totalRooms * 2 + 1));
 		let availableRooms = new Array();
 
+		// Creates all the rooms on a grid
 		function generateRooms(x, y, curFloor){
 
 			var nextX, nextY;
@@ -202,6 +217,7 @@ class Dungeon {
 
 		generateRooms(totalRooms, totalRooms, this.curFloor);
 
+		// Returns the neighboring rooms of a given point on the grid and adds that room to the walls of the room on the point
 		function checkForNeighbors(x, y){
 
 			var available = 0;
@@ -220,7 +236,7 @@ class Dungeon {
 
 		}
 
-
+		// Create the graph structure of the dungeon
 		for(var x = 0; x < floor.length; x ++){
 			for(var y = 0; y < floor.length; y ++){
 
@@ -232,7 +248,7 @@ class Dungeon {
 			}
 		}
 
-
+		// Generate stairs
 		for(var i = 0; i < numStairs; i ++){
 			var randRoom = availableRooms[Math.floor(Math.random() * availableRooms.length)];
 
@@ -244,6 +260,28 @@ class Dungeon {
 			var randDir = availableDirs[Math.floor(Math.random() * availableDirs.length)]
 			randRoom.walls[randDir] = Stairs;
 			randRoom.interactables.push(Stairs);
+		}
+
+		// Generate combat encounters
+		for(var i = 0; i < totalRooms / 2 /* tweak */; i ++){
+
+			var availableWalls = [];
+			var randRoom;
+			while(availableWalls.length == 0){
+
+				randRoom = this.curFloor[Math.floor(Math.random() * this.curFloor.length)];
+				for(var t = 0; t < 4; t ++){
+					if(isRoom(randRoom.walls[directions[t]]) && !isCorridor(randRoom.walls[directions[t]])){
+						availableWalls.push(t);
+					}
+				}
+			}
+
+			var randDir = availableWalls[Math.floor(Math.random() * availableWalls.length)];
+			var corr = new Corridor(directions[randDir], randRoom);
+			randRoom.walls[directions[randDir]].walls[directions[(randDir + 2) % 4]] = corr;
+			randRoom.walls[directions[randDir]] = corr;
+
 		}
 
 		return this.curFloor;

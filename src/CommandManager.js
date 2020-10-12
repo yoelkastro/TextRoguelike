@@ -19,7 +19,7 @@ class CommandManager {
 		}
 		if(directions.includes(args[0]) && args.length < 2){
 			if(isRoom(player.currentRoom.walls[args[0]])){
-				if(player.inCombat && args[0] == directions[(enemy.facingDirection + 2) % 4]){
+				if(player.inCombat && args[0] == directions[(player.currentRoom.enemy.facingDirection + 2) % 4] && player.currentRoom.enemy.active && !debug){
 					return "Passage to the " + args[0] + " is blocked by an enemy.";
 				}
 				player.setNextMoveDirection(args[0]);
@@ -66,8 +66,7 @@ class CommandManager {
 				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
 					try{
 						if(!this.currentInteractable[i].isOpen){
-							this.currentInteractable[i].open();
-							return "Opened " + args[a] + ".";
+							return this.currentInteractable[i].open();
 						}
 						else{
 							return "That is already open.";

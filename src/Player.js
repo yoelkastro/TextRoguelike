@@ -38,8 +38,14 @@ class Player extends Entity{
 
 	moveToNextRoom(room){
 		if(this.headingDirection != "none" && this.moveTarget == "room"){
+			if(isCorridor(this.currentRoom) && !this.currentRoom.enemy.active){
+				this.currentRoom.walls[this.headingDirection].walls[directions[(this.facingDirection + 2) % 4]] = this.currentRoom.walls[directions[(this.facingDirection + 2) % 4]];
+				this.currentRoom.walls[directions[(this.facingDirection + 2) % 4]].walls[this.headingDirection] = this.currentRoom.walls[this.headingDirection];
+			}
 			this.currentRoom = room;//this.currentRoom.walls[this.headingDirection];
 			this.currentRoom.visited = true;
+			if(isCorridor(this.currentRoom)){ initiateCombat(); this.inCombat = true;}
+			else							 this.inCombat = false;
 			this.setMoveTarget("center");
 		}
 	}
