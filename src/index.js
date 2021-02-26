@@ -255,13 +255,7 @@ function update(){
 	if((Math.abs(player.deltaPos[0]) >= roomSize / 2 + player.combatOffset[0] * (player.facingDirection - 2)
 		|| Math.abs(player.deltaPos[1]) >= roomSize / 2 + player.combatOffset[1] * (player.facingDirection - 1)) && player.moveTarget == "room"){
 
-		/*if(Math.floor(Math.random() * 0) == 0 && !player.inCombat){
-			initiateCombat();
-			player.moveToNextRoom(new Corridor(player.headingDirection, player.currentRoom));
-		}
-		else{*/
-			player.moveToNextRoom(player.currentRoom.walls[player.headingDirection]);
-		//}
+		player.moveToNextRoom(player.currentRoom.walls[player.headingDirection]);
 		
 		var dir = directions.findIndex(d => d == player.headingDirection);
 		player.deltaPos[0] *= -1;

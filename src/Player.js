@@ -8,12 +8,24 @@ class Entity {
 		this.defaultPos = [0, 0];
 		this.combatOffset = [0, 0];
 		this.color = "#FF00FF";
+
+		this.health = 100;
+		this.attack = 10;
+		this.defense = 10;
 	}
 
 	draw(gc, entitySize){
 		gc.fillStyle = this.color;
 		gc.fillRect((this.defaultPos[0] + this.deltaPos[0]) - (entitySize / 2), (this.defaultPos[1] + this.deltaPos[1]) - (entitySize / 2), entitySize, entitySize);
 	}
+
+	attack(target, baseDamage){
+		// Tweak
+		var totalDamage = baseDamage * this.attack / target.defense;
+		target.health -= totalDamage;
+		return totalDamage;
+	}
+
 }
 
 /*
@@ -42,7 +54,7 @@ class Player extends Entity{
 				this.currentRoom.walls[this.headingDirection].walls[directions[(this.facingDirection + 2) % 4]] = this.currentRoom.walls[directions[(this.facingDirection + 2) % 4]];
 				this.currentRoom.walls[directions[(this.facingDirection + 2) % 4]].walls[this.headingDirection] = this.currentRoom.walls[this.headingDirection];
 			}
-			this.currentRoom = room;//this.currentRoom.walls[this.headingDirection];
+			this.currentRoom = room;
 			this.currentRoom.visited = true;
 			if(isCorridor(this.currentRoom)){ initiateCombat(); this.inCombat = true;}
 			else							 this.inCombat = false;
@@ -77,6 +89,8 @@ class Player extends Entity{
 		}
 	}
 
-	
+	fight(){
+		return "You dealt " + super.attack(this.currentRoom.enemy, 10) + " damage to " + this.currentRoom.enemy.name + ".";
+	}
 
 }

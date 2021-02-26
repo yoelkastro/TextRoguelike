@@ -14,37 +14,41 @@ class CommandManager {
 	}
 
 	go(args){
+		var message = "";
 		if(viewingMap){
-			return "Can't move while looking at map.";
+			message = "Can't move while looking at map.";
 		}
 		if(directions.includes(args[0]) && args.length < 2){
 			if(isRoom(player.currentRoom.walls[args[0]])){
-				if(player.inCombat && args[0] == directions[(player.currentRoom.enemy.facingDirection + 2) % 4] && player.currentRoom.enemy.active && !debug){
-					return "Passage to the " + args[0] + " is blocked by an enemy.";
+				if(player.inCombat && player.currentRoom.enemy.active && !debug){
+					message = "Passage to the " + args[0] + " is blocked by an enemy.", 0;
 				}
-				player.setNextMoveDirection(args[0]);
-				player.setMoveTarget("room");
-				return "Went " + args[0] + ".";
+				else{
+					player.setNextMoveDirection(args[0]);
+					player.setMoveTarget("room");
+					message = "Went " + args[0] + ".";
+				}
 			}
 			else{
-				return "No passage in direction " + args[0] + ".";
+				message = "No passage in direction " + args[0] + ".", 0;
 			}
 		}
 		else if(args[0] == "down" && this.currentInteractable.includes(Stairs)){
-			return Stairs.use();
+			message = Stairs.use();
 		}
 		else{
-			return "Not a valid direction." + args[0];
+			message = "Not a valid direction."
 		}
+		return [message, 0];
 
 	}
 
 	escape(){
 
 		if(player.inCombat){
-			return this.go([directions[enemy.facingDirection]]);
+			return this.go([directions[player.currentRoom.enemy.facingDirection]]);
 		}
-		return "Nothing to escape from.";
+		return ["Nothing to escape from.", 0];
 
 	}
 
@@ -56,26 +60,27 @@ class CommandManager {
 			result += "<br>" + player.inventory[0][i].itemName + " x " + player.inventory[1][i];
 		}
 
-		return result
+		return [result, 0]
 	}
 
 	open(args){
 
+		var message = "";
 		for(var a = 0; a < args.length; a ++){
 			for(var i = 0; i < this.currentInteractable.length; i ++){
 				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
 					try{
 						if(!this.currentInteractable[i].isOpen){
-							return this.currentInteractable[i].open();
+							return [this.currentInteractable[i].open(), 0];
 						}
 						else{
-							return "That is already open.";
+							return ["That is already open.", 0];
 						}
 					} catch{}
 				}
 			}
 		}
-		return "Can't open that.";
+		return ["Can't open that.", 0];
 	}
 
 	close(args){
@@ -85,16 +90,16 @@ class CommandManager {
 				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
 					try{
 						if(this.currentInteractable[i].isOpen){
-							return this.currentInteractable[i].close();
+							return [this.currentInteractable[i].close(), 0];
 						}
 						else{
-							return "That is already closed.";
+							return ["That is already closed.", 0];
 						}
 					} catch{}
 				}
 			}
 		}
-		return "Can't close that.";
+		return ["Can't close that.", 0];
 	}
 
 	use(args){
@@ -103,17 +108,22 @@ class CommandManager {
 			for(var i = 0; i < this.currentInteractable.length; i ++){
 				if(this.currentInteractable[i].name.toLowerCase() == args[a]){
 					try{
-						return this.currentInteractable[i].use();
+						return [this.currentInteractable[i].use(), 1];
 					} catch{}
 				}
 			}
 		}
-		return "Can't use that.";
+		return ["Can't use that.", 0];
+	}
+
+	attack(args){
+		return [player.fight(), 1];
 	}
 
 	resolveCommand(command){
 
-		var res = "";
+		var res;
+		var message = "";
 
 		var sp = command.toLowerCase().split(" ");
 		this.currentInteractable = player.inventory[0].concat(player.currentRoom.interactables);
@@ -121,20 +131,27 @@ class CommandManager {
 		switch(sp[0]){
 
 
-			case "go": 			res += this.go(sp.slice(1, sp.length)); 	break;
-			case "help": 		res += this.help(sp.slice(1, sp.length)); 	break;
-			case "inventory": 	res += this.inventory(); 					break;
-			case "open": 		res += this.open(sp.slice(1, sp.length));	break;
-			case "use": 		res += this.use(sp.slice(1, sp.length));	break;
-			case "close": 		res += this.close(sp.slice(1, sp.length));	break;
+			case "go": 			res = this.go(sp.slice(1, sp.length));  	break;
+			case "help": 		res = this.help(sp.slice(1, sp.length)); 	break;
+			case "inventory": 	res = this.inventory(); 					break;
+			case "open": 		res = this.open(sp.slice(1, sp.length));	break;
+			case "use": 		res = this.use(sp.slice(1, sp.length)); 	break;
+			case "close": 		res = this.close(sp.slice(1, sp.length));	break;
 			case "escape":
-			case "run": 		res += this.escape();						break;
+			case "run": 		res = this.escape();						break;
+			case "fight":
+			case "attack": 		res = this.attack();						break;
 
-			default: res += "Unrecognized command.";
+			default: return "Unrecognized command.";
 
 		}
+		message += res[0];
 
-		return res;
+		if(player.inCombat && res[1] > 0){
+			message += "<br><span style=\"color:#FF00FF\">" + player.currentRoom.enemy.fight() + "</span>";
+		}
+
+		return message;
 
 	}
 

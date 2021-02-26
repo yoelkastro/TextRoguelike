@@ -6,6 +6,8 @@ class Enemy extends Entity {
 	constructor() {
 		super();
 		this.active = true;
+		this.name = "Enemy";
+		this.health = 30;
 	}
 
 	updatePositions(){
@@ -13,7 +15,12 @@ class Enemy extends Entity {
 	}
 
 	draw(gc, entitySize){
+		if(this.health <= 0) this.active = false;
 		if(this.active) super.draw(gc, entitySize);
+	}
+
+	fight(){
+		return this.name + " dealt " + super.attack(player, 5) + " damage.";
 	}
 
 }
