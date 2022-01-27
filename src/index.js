@@ -9,7 +9,6 @@ var gameBoard = {
 	canvas : document.createElement("canvas"),
 	textFieldDiv : document.createElement("div"),
 	textField : document.createElement("p"),
-	textFieldLast : document.createElement("span"),
 	inputField : document.createElement("input"),
 	command : "",
 	// Initialize the gameBoard
@@ -18,18 +17,13 @@ var gameBoard = {
 		this.canvas.setAttribute("style", "float: left; display: table-cell");
 		document.body.appendChild(this.canvas);
 
-		this.textFieldDiv.setAttribute("style", `display: table-cell; position: relative;`);
+		this.textFieldDiv.setAttribute("style", `display: table-cell; position: relative; overflow-x: hidden; overflow-y: scroll;`);
 		document.body.appendChild(this.textFieldDiv);
 
 		this.textField.setAttribute("style", `@import url(https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap); font-family: 'Roboto Slab'; 
 															font-size: 36px; display: table-cell; color: #FFFFFF; background: transparent;  outline: none;
-															position: absolute; bottom: 0; left: 42px`);
+															position: absolute; bottom: 0; left: 42px; overflow: hidden scroll;`);
 		this.textFieldDiv.appendChild(this.textField);
-
-		this.textFieldLast.setAttribute("style", `@import url(https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap); font-family: 'Roboto Slab'; 
-															font-size: 36px; display: table-cell; color: #FFFFFF; background: transparent;  outline: none;
-															position: absolute; bottom: 0; left: 42px`);
-		this.textField.appendChild(this.textFieldLast);
 		
 
 		this.inputField.setAttribute("style", `@import url(https://fonts.googleapis.com/css?family=Roboto+Slab&display=swap); font-family: 'Roboto Slab'; 
@@ -108,6 +102,9 @@ var gameBoard = {
 		this.textFieldDiv.style.height = (this.inputField.style.top.substring(0, this.inputField.style.top.length - 2) - 25).toString() + "px";
 		this.textFieldDiv.style.width = this.inputField.style.width;
 
+		this.textField.style.height = ((this.inputField.style.top.substring(0, this.inputField.style.top.length - 2) - 25) * 0.9).toString() + "px";
+		this.textField.style.width = (this.inputField.style.width.substring(0, this.inputField.style.width.length - 2) * 0.9) + "px";
+
 	},
 	// Clear all the drawing in the gameBoard
 	clear : function(){
@@ -121,16 +118,29 @@ var gameBoard = {
 
 	// Updates the canvas
 	update : function(){
-		if(this.keys.includes(13)){ // Enter pressed
-			this.command = this.inputField.value;
-			this.inputField.value = "";
-		}
 		this.inputField.focus();
 		this.clear();
 		this.resize();
 		// this.draw();
 	}
 
+}
+
+function handleInput(){
+
+	var keycodes = {RIGHT: 39, UP: 38, LEFT: 37, DOWN: 40}
+
+	for(var key of gameBoard.keys){
+		switch(key){
+			case keycodes.RIGHT:
+			case keycodes.UP:
+			case keycodes.LEFT:
+			case keycodes.DOWN:
+				player.setNextMoveDirection(directions[key - 37]);
+				player.setMoveTarget("room");
+				break;
+		}
+	}
 }
 
 // Draw entire dungeon, used for map drawing
@@ -306,8 +316,11 @@ function update(){
 
  	if(gameBoard.command != ""){ // Get the next command
  		gameBoard.textField.innerHTML = gameBoard.textField.innerHTML + "<br><br>" + commandManager.resolveCommand(gameBoard.command);
+ 		gameBoard.textField.scrollTop = gameBoard.textField.scrollHeight - gameBoard.textField.clientHeight;
 		gameBoard.command = "";
 	}
+
+	handleInput();
 
 }
 

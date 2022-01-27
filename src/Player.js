@@ -1,3 +1,4 @@
+
 /*
 	General representation of an entity
 */
